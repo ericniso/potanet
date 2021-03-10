@@ -1,0 +1,12 @@
+matplotlib==3.2.1
+mvgavg==0.1.0
+numpy==1.18.2
+pandas==1.0.3
+tensorflow==2.2.0rc3
+tqdm==4.44.1
+joblib==0.14.1
+fastapi==0.62.0
+imblearn==0.0
+Pillow==8.0.1
+pyimzml==1.4.1
+scikit_learn==0.23.2
