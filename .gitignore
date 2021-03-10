@@ -2,4 +2,6 @@
 
 figures
 
-./explorer-server.py
+explorer-server.py
+
+run-explorer-server.sh
