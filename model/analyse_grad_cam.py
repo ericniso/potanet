@@ -169,7 +169,7 @@ if __name__ == '__main__':
                         xlabels[l].set_visible(True)
 
                 plt.bar(xticks, normalized_threshold_histogram, align='edge', width=1.0)
-            
+                plt.ylim(0.0, 1.0)
                 plt.tight_layout()
                 plt.savefig(outdir / '{}_class_{}_threshold_{}_normalized.pdf'.format(patient_type, c, str(threshold_values[t])))
 
@@ -191,7 +191,7 @@ if __name__ == '__main__':
 
             plt.bar(xticks, normalized_histograms['training'], align='edge', width=1.0, label='training', color='b', alpha=0.5)
             plt.bar(xticks, normalized_histograms['validation'], align='edge', width=1.0, label='validation', color='g', alpha=0.5)
-            
+            plt.ylim(0.0, 1.0)
             # plt.title('cosine similarity = {}'.format(histogram_distances['distances']['cosine_similarity'][c, t]))
             plt.legend(loc='upper right')
             plt.tight_layout()
