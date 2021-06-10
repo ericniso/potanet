@@ -1,7 +1,5 @@
+.idea
+
 .vscode
 
-figures
-
-explorer-server.py
-
-run-explorer-server.sh
+env
