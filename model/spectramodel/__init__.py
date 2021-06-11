@@ -5,3 +5,4 @@ from .spectra_predict_sequence import SpectraPredictSequence
 from .csv_loader import csv_loader
 from .lr_decay import exp_decay
 from .spectra_augmenter import SpectraAugmenter, augment_dataset
+from .spectrum import Spectrum
