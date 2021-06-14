@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd model
+cd modules
 
 ROOT_DIR="/data"
 SAMPLES_KIND="tesi" # tesi airc_thyroid_paper

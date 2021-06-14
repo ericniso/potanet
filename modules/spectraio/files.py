@@ -1,13 +1,11 @@
+import config
 from pathlib import Path
 
 class Files():
 
-    def __init__(self, root=None):
+    def __init__(self, root=config.ROOT_PATH):
 
-        if root == None:
-            self.root = Path('/data')
-        else:
-            self.root = Path(root)
+        self.root = Path(root)
 
         self.out_path = self.root / 'output'
 

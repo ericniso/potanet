@@ -2,7 +2,7 @@
 
 run_id=$RANDOM
 
-cd model
+cd modules
 
 for i in 4 # 3 2
 do
