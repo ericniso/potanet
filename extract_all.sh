@@ -3,7 +3,7 @@
 cd model
 
 ROOT_DIR="/data"
-SAMPLES_KIND="tesi" # tesi paper
+SAMPLES_KIND="tesi" # tesi airc_thyroid_paper
 IMZML_ROI_ROOT_DIR="$ROOT_DIR/imzML_roi_single_spectra_raw"
 IMZML_ROI_EXTRACTED_ROOT_DIR="$ROOT_DIR/imzML_roi_single_spectra_extracted"
 
