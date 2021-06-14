@@ -28,7 +28,7 @@ do
     # python3 parser.py $IMZML_ROI_ROOT_DIR/training/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/training/$P
 
     if [ -f $IMZML_ROI_ROOT_DIR/training/"$P.imzML" ] && [ -f $IMZML_ROI_ROOT_DIR/training/"$P.ibd" ]; then
-        echo $P
+        # echo $P
         python3 parser.py $IMZML_ROI_ROOT_DIR/training/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/training/$P
     fi
 
@@ -68,7 +68,7 @@ do
     # python3 parser.py $IMZML_ROI_ROOT_DIR/validation/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/validation/$P
 
     if [ -f $IMZML_ROI_ROOT_DIR/validation/"$P.imzML" ] && [ -f $IMZML_ROI_ROOT_DIR/validation/"$P.ibd" ]; then
-        echo $P
+        # echo $P
         python3 parser.py $IMZML_ROI_ROOT_DIR/validation/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/validation/$P
     fi
 
@@ -99,7 +99,7 @@ do
     # python3 parser.py $IMZML_ROI_ROOT_DIR/validation_exvivo/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/validation_exvivo/$P
 
     if [ -f $IMZML_ROI_ROOT_DIR/validation_exvivo/"$P.imzML" ] && [ -f $IMZML_ROI_ROOT_DIR/validation_exvivo/"$P.ibd" ]; then
-        echo $P
+        # echo $P
         python3 parser.py $IMZML_ROI_ROOT_DIR/validation_exvivo/"$P.imzML" $IMZML_ROI_EXTRACTED_ROOT_DIR/validation_exvivo/$P
     fi
 
