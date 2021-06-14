@@ -1,8 +1,14 @@
 #!/bin/bash
 
+if [[ ! -z "$POTANET_ROOT_DIR" ]]; then
+  echo "POTANET_ROOT_DIR environment variable not set"
+  echo "Please edit env.sh and \`source env.sh\`"
+  exit 1
+fi
+
 cd modules
 
-ROOT_DIR="/data"
+ROOT_DIR=$POTANET_ROOT_DIR
 SAMPLES_KIND="tesi" # tesi airc_thyroid_paper
 IMZML_ROI_ROOT_DIR="$ROOT_DIR/imzML_roi_single_spectra_raw"
 IMZML_ROI_EXTRACTED_ROOT_DIR="$ROOT_DIR/imzML_roi_single_spectra_extracted"

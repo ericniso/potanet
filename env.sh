@@ -1,0 +1,1 @@
+export POTANET_ROOT_DIR="/data"

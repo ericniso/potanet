@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ ! -z "$POTANET_ROOT_DIR" ]]; then
+  echo "POTANET_ROOT_DIR environment variable not set"
+  echo "Please edit env.sh and \`source env.sh\`"
+  exit 1
+fi
+
 run_id=$RANDOM
 
 cd model
