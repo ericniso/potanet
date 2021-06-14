@@ -3,7 +3,7 @@ import sys
 import os
 import argparse
 import numpy as np
-from spectraio import spectra_logger
+from .logger import spectra_logger
 from pyimzml.ImzMLParser import ImzMLParser
 from pathlib import Path
 
