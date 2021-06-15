@@ -3,7 +3,7 @@ from pathlib import Path
 
 class Files():
 
-    def __init__(self, root=config.ROOT_PATH):
+    def __init__(self, root=config.POTANET_ROOT_DIR):
 
         self.root = Path(root)
 

@@ -1,11 +1,12 @@
+import config
 import pandas as pd
 from pathlib import Path
 
 class Dataset():
 
-    def __init__(self, root=None):
+    def __init__(self, root=config.POTANET_ROOT_DIR):
 
-        if root == None:
+        if root is None:
             self.root = Path('/data')
         else:
             self.root = Path(root)
