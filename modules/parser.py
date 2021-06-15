@@ -46,9 +46,6 @@ def save_data(path, coords, masses, spectra):
 
 if __name__ == "__main__":
 
-    potanet_logger.info(config.POTANET_ROOT_DIR)
-    exit(0)
-
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("imzml", type=str, help="")
     parser.add_argument("outdir", type=str, help="")
