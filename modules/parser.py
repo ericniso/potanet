@@ -1,3 +1,4 @@
+import time
 import config
 import warnings
 import sys
@@ -7,74 +8,92 @@ import numpy as np
 from logger import potanet_logger
 from pyimzml.ImzMLParser import ImzMLParser
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 
-def load_data(path):
+class ParserWorker:
 
-    parser = ImzMLParser(path)
-    
-    coords = []
-    masses = []
-    spectra = []
+    def __init__(self, path_raw, path_extracted):
 
-    for idx, (x, y, z) in enumerate(parser.coordinates):
-        mzs, intensities = parser.getspectrum(idx)
+        self.path_raw = path_raw
+        self.path_extracted = path_extracted
 
-        coords.append([x, y, z])
-        masses.append(mzs)
-        spectra.append(intensities)
+    def parse(self, sample):
 
-    coords = np.array(coords, dtype=np.int)
-    masses = np.array(masses, dtype=np.float)
-    spectra = np.array(spectra, dtype=np.float)
+        sample_kind, sample_id = sample
 
-    return coords, masses, spectra
+        loaded_data = self.__load_data__(sample_kind, sample_id)
+        self.__save_data__(sample_kind, sample_id, loaded_data)
 
+        potanet_logger.info("Processed {}/{}".format(sample_kind, sample_id))
 
-def save_data(path, coords, masses, spectra):
+        return sample
 
-    coords_path = path / "coordinates.txt"
-    masses_path = path / "mzs.txt"
-    spectra_path = path / "intensities.txt"
+    def __load_data__(self, sample_kind, sample_id):
 
-    coords = coords.astype(np.int)
+        parser = ImzMLParser(self.path_raw / sample_kind / "{}.imzML".format(sample_id))
 
-    np.savetxt(coords_path, coords, fmt="%i")
-    np.savetxt(masses_path, masses)
-    np.savetxt(spectra_path, spectra)
+        coords, masses, spectra = [], [], []
+
+        for idx, idx_coords in enumerate(parser.coordinates):
+            mzs, intensities = parser.getspectrum(idx)
+
+            coords.append(list(idx_coords))
+            masses.append(mzs)
+            spectra.append(intensities)
+
+        coords = np.array(coords, dtype=np.int)
+        masses = np.array(masses, dtype=np.float)
+        spectra = np.array(spectra, dtype=np.float)
+
+        return coords, masses, spectra
+
+    def __save_data__(self, sample_kind, sample_id, data):
+
+        sample_id_root_dir = self.path_extracted / sample_kind / sample_id
+
+        if sample_id_root_dir.exists():
+            os.rmdir(sample_id_root_dir)
+
+        os.makedirs(sample_id_root_dir)
+
+        coords, masses, spectra = data
+
+        np.savetxt(sample_id_root_dir / "coordinates.txt", coords, fmt="%i")
+        np.savetxt(sample_id_root_dir / "masses.txt", masses)
+        np.savetxt(sample_id_root_dir / "intensities.txt", spectra)
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="")
-    parser.add_argument("imzml", type=str, help="")
-    parser.add_argument("outdir", type=str, help="")
-    args = parser.parse_args()
+    execution_start_time = time.perf_counter()
 
-    imzml_path = Path(args.imzml)
+    imzml_raw = Path(config.POTANET_IMZML_RAW_ROOT_DIR)
+    imzml_extracted = Path(config.POTANET_IMZML_EXTRACTED_ROOT_DIR)
+    # TODO: remove ".."
+    imzml_samples_list_dir = Path(__file__).parent / ".." / config.POTANET_SAMPLES_DIR / config.POTANET_SAMPLES_TYPE
 
-    if not imzml_path.exists():
-        potanet_logger.error("Invalid .imzml path: {!r}".format(imzml_path))
-        exit(1)
+    os.makedirs(imzml_extracted, exist_ok=True)
 
-    if not imzml_path.is_file():
-        potanet_logger.error("Invalid .imzml filename: {!r}".format(imzml_path))
-        exit(1)
+    samples_kind_id = []
 
-    output_folder = Path(args.outdir)
+    potanet_logger.info("Reading sample ids list")
 
-    if not output_folder.exists():
-        potanet_logger.info("Output folder doesn't exist, creating")
-        os.makedirs(output_folder)
+    for sample_type in imzml_samples_list_dir.iterdir():
+        if sample_type.is_file():
+            sample_kind = sample_type.stem
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        potanet_logger.info("Extracting data from {!r}".format(imzml_path))
-        coords, masses, spectra = load_data(imzml_path)
+            with open(sample_type) as samples:
+                for sample_id in samples:
+                    samples_kind_id.append((sample_kind.strip(), sample_id.strip()))
 
-    coords = np.array(coords, dtype=np.int)
-    masses = np.array(masses, dtype=np.float)
-    spectra = np.array(spectra, dtype=np.float)
+    potanet_logger.info("Starting data extraction with {} workers".format(config.POTANET_THREAD_POOL_SIZE))
 
-    potanet_logger.info("Saving data to {!r}".format(output_folder))
-    save_data(output_folder, coords, masses, spectra)
+    with ThreadPoolExecutor(max_workers=config.POTANET_THREAD_POOL_SIZE) as executor:
+
+        worker = ParserWorker(imzml_raw, imzml_extracted)
+        result = executor.map(worker.parse, samples_kind_id)
+
+    execution_end_time = time.perf_counter()
+
+    potanet_logger.info("Extraction complete in {}s".format(execution_end_time - execution_start_time))
