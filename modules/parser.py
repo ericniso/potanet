@@ -1,9 +1,10 @@
+import config
 import warnings
 import sys
 import os
 import argparse
 import numpy as np
-from .logger import spectra_logger
+from logger import potanet_logger
 from pyimzml.ImzMLParser import ImzMLParser
 from pathlib import Path
 
@@ -44,7 +45,10 @@ def save_data(path, coords, masses, spectra):
 
 
 if __name__ == "__main__":
-    
+
+    potanet_logger.info(config.POTANET_ROOT_DIR)
+    exit(0)
+
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("imzml", type=str, help="")
     parser.add_argument("outdir", type=str, help="")
@@ -53,27 +57,27 @@ if __name__ == "__main__":
     imzml_path = Path(args.imzml)
 
     if not imzml_path.exists():
-        spectra_logger.error("Invalid .imzml path: {!r}".format(imzml_path))
+        potanet_logger.error("Invalid .imzml path: {!r}".format(imzml_path))
         exit(1)
 
     if not imzml_path.is_file():
-        spectra_logger.error("Invalid .imzml filename: {!r}".format(imzml_path))
+        potanet_logger.error("Invalid .imzml filename: {!r}".format(imzml_path))
         exit(1)
 
     output_folder = Path(args.outdir)
 
     if not output_folder.exists():
-        spectra_logger.info("Output folder doesn't exist, creating")
+        potanet_logger.info("Output folder doesn't exist, creating")
         os.makedirs(output_folder)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        spectra_logger.info("Extracting data from {!r}".format(imzml_path))
+        potanet_logger.info("Extracting data from {!r}".format(imzml_path))
         coords, masses, spectra = load_data(imzml_path)
 
     coords = np.array(coords, dtype=np.int)
     masses = np.array(masses, dtype=np.float)
     spectra = np.array(spectra, dtype=np.float)
 
-    spectra_logger.info("Saving data to {!r}".format(output_folder))
+    potanet_logger.info("Saving data to {!r}".format(output_folder))
     save_data(output_folder, coords, masses, spectra)

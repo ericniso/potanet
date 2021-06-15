@@ -1,9 +1,10 @@
 import os
 import logging
+from pathlib import Path
 from logging import config
 
 os.makedirs('logs', exist_ok=True)
 
-logging.config.fileConfig('logging.ini')
+logging.config.fileConfig(Path(__file__).parent / 'logging.ini')
 
-spectra_logger = logging.getLogger('root')
+potanet_logger = logging.getLogger('root')
