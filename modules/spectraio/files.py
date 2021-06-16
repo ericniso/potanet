@@ -1,39 +1,35 @@
 import config
 from pathlib import Path
 
-class Files():
 
-    def __init__(self, root=config.POTANET_ROOT_DIR):
+class Files:
 
-        self.root = Path(root)
+    def __init__(self):
 
-        self.out_path = self.root / 'output'
+        self.root = Path(config.POTANET_ROOT_DIR)
 
-        self.spectra_plot_out_dir = self.out_path / 'spectra_plot'
+        self.out_path = self.root / "output"
 
-        self.isotopenet_out_dir = self.out_path / 'isotopenet'
-        self.isotopenet_out_path = self.isotopenet_out_dir / 'isotopenet.h5'
-        self.isotopenet_result_path = self.isotopenet_out_dir / 'isotopenet.joblib'
+        self.spectra_plot_out_dir = self.out_path / "spectra_plot"
 
-        # ROI single spectrum
+        self.isotopenet_out_dir = self.out_path / "isotopenet"
+        self.isotopenet_out_path = self.isotopenet_out_dir / "isotopenet.h5"
+        self.isotopenet_result_path = self.isotopenet_out_dir / "isotopenet.joblib"
 
-        self.roi_single_spectra_path_root = self.root / 'imzML_roi_single_spectra'
+        self.spectra_processed_path_root = self.root / "imzML_processed"
         
-        self.roi_single_spectra_path = self.roi_single_spectra_path_root / 'dataset'
-        self.roi_single_spectra_path_data = self.roi_single_spectra_path / 'spectra.csv'
-        self.roi_single_spectra_path_intensities = self.roi_single_spectra_path / 'intensities'
-        self.roi_single_spectra_path_mzs = self.roi_single_spectra_path / 'mzs'
-        self.roi_single_spectra_path_coordinates = self.roi_single_spectra_path / 'coordinates'
+        self.spectra_processed_dataset = self.spectra_processed_path_root / "dataset"
+        self.spectra_processed_dataset_data = self.spectra_processed_dataset / "spectra.csv"
+        self.spectra_processed_dataset_intensities = self.spectra_processed_dataset / "intensities"
+        self.spectra_processed_dataset_masses = self.spectra_processed_dataset / "masses"
 
-        self.roi_single_spectra_path_data_single_root = self.roi_single_spectra_path_root / '_single'
-        self.roi_single_spectra_path_data_single = self.roi_single_spectra_path_data_single_root / 'spectra.csv'
-        self.roi_single_spectra_path_intensities_single = self.roi_single_spectra_path_data_single_root / 'intensities'
-        self.roi_single_spectra_path_mzs_single = self.roi_single_spectra_path_data_single_root / 'mzs'
-        self.roi_single_spectra_path_coordinates_single = self.roi_single_spectra_path_data_single_root / 'coordinates'
-        
-        self.roi_single_spectra_path_data_avg_root = self.roi_single_spectra_path_root / '_avg'
-        self.roi_single_spectra_path_data_avg = self.roi_single_spectra_path_data_avg_root / 'spectra.csv'
-        self.roi_single_spectra_path_intensities_avg = self.roi_single_spectra_path_data_avg_root / 'intensities'
-        self.roi_single_spectra_path_mzs_avg = self.roi_single_spectra_path_data_avg_root / 'mzs'
-        self.roi_single_spectra_path_coordinates_avg = self.roi_single_spectra_path_data_avg_root / 'coordinates'
+        self.spectra_processed_dataset_single = self.spectra_processed_path_root / "_single"
+        self.spectra_processed_dataset_single_data = self.spectra_processed_dataset_single / "spectra.csv"
+        self.spectra_processed_dataset_single_intensities = self.spectra_processed_dataset_single / "intensities"
+        self.spectra_processed_dataset_single_masses = self.spectra_processed_dataset_single / "masses"
+
+        self.spectra_processed_dataset_avg = self.spectra_processed_path_root / "_avg"
+        self.spectra_processed_dataset_avg_data = self.spectra_processed_dataset_avg / "spectra.csv"
+        self.spectra_processed_dataset_avg_intensities = self.spectra_processed_dataset_avg / "intensities"
+        self.spectra_processed_dataset_avg_masses = self.spectra_processed_dataset_avg / "masses"
 
