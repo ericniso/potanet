@@ -6,6 +6,7 @@ from collections import deque
 from bisect import insort, bisect_left
 from itertools import islice
 
+
 class Spectrum:
 
     def __int__(self, csv_loader, csv_row):
@@ -18,7 +19,7 @@ class Spectrum:
         self.masses = csv_loader['mzs'](csv_row)
         self.coordinates = csv_loader['coordinates'](csv_row)
 
-        self._check_shape()
+        self.__check_shape__()
 
         self.intensities = np.copy(self.original_intensities)
 
@@ -67,7 +68,7 @@ class Spectrum:
 
         self.intensities = tmp_zeros
 
-    def _check_shape(self):
+    def __check_shape__(self):
 
         if self.original_intensities.shape[0] > self.target_size:
 
