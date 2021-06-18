@@ -1,130 +1,110 @@
-import sys
-import argparse
 import os
+import config
 import numpy as np
-import json
 import pandas as pd
-import uuid
 import shutil
-from pathlib import Path
-from tqdm import tqdm
-from spectraio import Dataset, DataHandler, Files
-from spectramodel import csv_loader
+import time
+from spectraio import Files
+from concurrent.futures import ThreadPoolExecutor
+from logger import potanet_logger
 
-def get_neighbours(coords):
 
-    x = coords[0]
-    y = coords[1]
+class AverageSpectrum:
 
-    return np.array([
-        [x - 1, y - 1, 1],
-        [x, y - 1, 1],
-        [x + 1, y - 1, 1],
-        [x + 1, y, 1],
-        [x + 1, y + 1, 1],
-        [x, y + 1, 1],
-        [x - 1, y + 1, 1],
-        [x - 1, y, 1],
-    ])
+    def __init__(self, dataset, patient_id, csv_row, intensities_path):
 
-if __name__ == '__main__':
-    
-    parser = argparse.ArgumentParser(description='')
-    args = parser.parse_args()
+        self.dataset = dataset
+        self.patient_id = patient_id
+        self.csv_row = csv_row
+        self.intensities_path = intensities_path
+        self.original_intensities = np.loadtxt(self.intensities_path / "{}.txt".format(self.csv_row.at["sample"]))
+
+    def __find_neighbours__(self):
+
+        sample = self.csv_row.at["sample"]
+        start_x = self.csv_row.at["coordinates_x"] - 1
+        end_x = start_x + 2
+        start_y = self.csv_row.at["coordinates_y"] - 1
+        end_y = start_y + 2
+        neighbours_coords = []
+        for x in range(start_x, end_x + 1):
+            for y in range(start_y, end_y + 1):
+                neighbour = "{}_{}_{}_{}".format(self.patient_id, x, y, self.csv_row.at["coordinates_z"])
+                if not neighbour == sample:
+                    neighbours_coords.append(neighbour)
+
+        return neighbours_coords
+
+    def get_average_intensities(self):
+
+        neighbours = self.__find_neighbours__()
+        avg_intensities = [self.original_intensities]
+
+        for neigh in neighbours:
+            neigh_row = self.dataset[self.dataset["sample"] == neigh]
+
+            if neigh_row.shape[0] > 0:
+                neigh_row = neigh_row.iloc[0]
+                neigh_intensity = np.loadtxt(self.intensities_path / "{}.txt".format(neigh_row.at["sample"]))
+                avg_intensities.append(neigh_intensity)
+
+        avg_intensities = np.array(avg_intensities)
+        avg_intensities = np.mean(avg_intensities, axis=0)
+
+        return avg_intensities
+
+
+class ProcessingWorker:
+
+    def __init__(self, dataset, src_intensities_path, dest_intensities_path):
+
+        self.dataset = dataset
+        self.src_intensities_path = src_intensities_path
+        self.dest_intensities_path = dest_intensities_path
+
+    def __call__(self, *args, **kwargs):
+        patient_id = args[0]
+        patient_dataset = self.dataset[self.dataset["patient"] == patient_id]
+
+        for i in range(patient_dataset.shape[0]):
+            row = patient_dataset.iloc[i]
+            average_spectrum = AverageSpectrum(patient_dataset, patient_id, row, self.src_intensities_path)\
+                .get_average_intensities()
+            np.savetxt(self.dest_intensities_path / "{}.txt".format(row.at["sample"]), average_spectrum)
+
+        potanet_logger.info("Created average spectra of patient {}".format(patient_id))
+
+        return patient_id
+
+
+if __name__ == "__main__":
+
+    execution_start_time = time.perf_counter()
 
     files = Files()
-    # dataset = Dataset()
-    loader = csv_loader(files.roi_single_spectra_path_data_single_root)
-    data_handler = DataHandler()
 
-    dataset_info = []
-    patient_info = []
-    spectrum_info = []
-    mzs_info = []
-    coords_info = []
-    diagnosis_info = []
+    if files.spectra_processed_dataset_avg.exists():
+        shutil.rmtree(files.spectra_processed_dataset_avg)
 
-    if files.roi_single_spectra_path_data_avg_root.exists():
-        shutil.rmtree(files.roi_single_spectra_path_data_avg_root)
+    os.makedirs(files.spectra_processed_dataset_avg)
+    os.makedirs(files.spectra_processed_dataset_avg_intensities)
 
-    os.makedirs(files.roi_single_spectra_path_data_avg_root)
-    os.makedirs(files.roi_single_spectra_path_intensities_avg)
-    os.makedirs(files.roi_single_spectra_path_mzs_avg)
-    os.makedirs(files.roi_single_spectra_path_coordinates_avg)
+    potanet_logger.info("Starting copy of dataset masses into new directory")
 
-    dataset = pd.read_csv(files.roi_single_spectra_path_data_single)
+    shutil.copytree(files.spectra_processed_dataset_single_masses, files.spectra_processed_dataset_avg_masses)
 
-    patients = dataset['patient'].unique()
+    dataset = pd.read_csv(files.spectra_processed_dataset_single_data)
+    shutil.copyfile(files.spectra_processed_dataset_single_data, files.spectra_processed_dataset_avg_data)
 
-    all_found = 0
+    patients = dataset["patient"].unique()
 
-    with tqdm(total=dataset.shape[0]) as pbar:
-        for p in patients: # tqdm(patients):
-            patient_dataset = dataset[dataset['patient'] == p]
-            n_found_total = 0
-            for i in range(patient_dataset.shape[0]):
+    potanet_logger.info("Starting dataset creation with {} workers".format(config.POTANET_THREAD_POOL_SIZE))
 
-                i_patient = patient_dataset.iloc[i]
-                i_coords = loader['coordinates'](i_patient)
-                neighbours = get_neighbours(i_coords)
+    with ThreadPoolExecutor(max_workers=config.POTANET_THREAD_POOL_SIZE) as executor:
 
-                avg_intensities = []
-                avg_intensities.append(loader['spectrum'](i_patient))
+        result = executor.map(ProcessingWorker(dataset, files.spectra_processed_dataset_single_intensities,
+                                               files.spectra_processed_dataset_avg_intensities), patients)
 
-                n_found = 0
-                for n in neighbours:
-                    for j in range(patient_dataset.shape[0]):
-                        j_patient = patient_dataset.iloc[j]
-                        j_coords = loader['coordinates'](j_patient)
-
-                        if (j_coords == n).all():
-                            n_found += 1
-                            avg_intensities.append(loader['spectrum'](j_patient))
-                
-                n_found_total += 1 if n_found == 8 else 0
-
-                avg_intensities = np.array(avg_intensities)
-                avg_intensities = np.average(avg_intensities, axis=0)
-                
-                save_id = uuid.uuid4()
-                out_file_name = '{}.txt'.format(save_id)
-                out_file = files.roi_single_spectra_path_intensities_avg / out_file_name
-                np.savetxt(out_file, avg_intensities)
-                spectrum_info.append(save_id)
-
-                save_id = uuid.uuid4()
-                out_file_name = '{}.txt'.format(save_id)
-                out_file = files.roi_single_spectra_path_mzs_avg / out_file_name
-                np.savetxt(out_file, loader['mzs'](i_patient))
-                mzs_info.append(save_id)
-
-                save_id = uuid.uuid4()
-                out_file_name = '{}.txt'.format(save_id)
-                out_file = files.roi_single_spectra_path_coordinates_avg / out_file_name
-                np.savetxt(out_file, i_coords.astype(np.int), fmt='%i')
-                coords_info.append(save_id)
-
-                dataset_info.append(i_patient['dataset'])
-                patient_info.append(i_patient['patient'])
-                diagnosis_info.append(i_patient['diagnosis'])
-
-                pbar.update(1)
-            
-            all_found += n_found_total
-
-    dataset_to_save = pd.DataFrame({
-        'dataset': dataset_info,
-        'patient': patient_info,
-        'spectrum': spectrum_info,
-        'mzs': mzs_info,
-        'coordinates': coords_info,
-        'diagnosis': diagnosis_info
-    })
-    dataset_to_save = dataset_to_save[['dataset', 'patient', 'spectrum', 'mzs', 'coordinates', 'diagnosis']]
-    dataset_to_save['dataset'] = dataset_to_save['dataset'].apply(str)
-    dataset_to_save['patient'] = dataset_to_save['patient'].apply(str)
-    dataset_to_save['diagnosis'] = dataset_to_save['diagnosis'].apply(int)
-    dataset_to_save.to_csv(files.roi_single_spectra_path_data_avg, index=False)
-
-    print('{}/{}'.format(all_found, dataset.shape[0]))
-    print('{}'.format(all_found / dataset.shape[0]))
+    execution_end_time = time.perf_counter()
+    potanet_logger.info(
+        "Dataset of {} spectra created in {}s".format(-1, execution_end_time - execution_start_time))
