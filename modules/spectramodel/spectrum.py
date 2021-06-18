@@ -1,6 +1,5 @@
 import config
 import numpy as np
-
 from mvgavg import mvgavg
 from collections import deque
 from bisect import insort, bisect_left
@@ -9,15 +8,24 @@ from itertools import islice
 
 class Spectrum:
 
-    def __int__(self, csv_loader, csv_row):
+    def __int__(self, files, csv_row):
 
         self.target_size = config.SPECTRUM_SIZE
 
-        self.patient = csv_loader['patient'](csv_row)
-        self.diagnosis = csv_loader['diagnosis'](csv_row)
-        self.original_intensities = csv_loader['spectrum'](csv_row)
-        self.masses = csv_loader['mzs'](csv_row)
-        self.coordinates = csv_loader['coordinates'](csv_row)
+        self.dataset = csv_row.at["dataset"]
+        self.sample = csv_row.at["sample"]
+        self.patient = csv_row.at["patient"]
+        self.diagnosis = csv_row.at["diagnosis"]
+        self.original_intensities = np.loadtxt(
+            files.spectra_processed_dataset_intensities / "{}.txt".format(self.sample))
+        self.masses = np.loadtxt(files.spectra_processed_dataset_masses / "{}.txt".format(self.sample))
+        self.coordinates = np.array([
+            csv_row.at["coordinates_x"],
+            csv_row.at["coordinates_y"],
+            csv_row.at["coordinates_z"]
+        ], dtype=np.int)
+
+        # TODO: check for intensities < 0
 
         self.__check_shape__()
 
@@ -97,3 +105,7 @@ class Spectrum:
             self.original_intensities = tmp_intensities
             self.masses = tmp_masses
 
+    def __repr__(self):
+        return "<{} dataset_type={}, patient_id={}, diagnosis={}, sample_id={}, intensities={}, masses={}, coordinates={}>".format(
+            type(self).__name__, self.dataset, self.patient, self.diagnosis, self.sample, self.intensities.shape,
+            self.masses.shape, self.coordinates)
