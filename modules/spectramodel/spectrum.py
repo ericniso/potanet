@@ -86,7 +86,7 @@ class Spectrum:
         if self.original_intensities.shape[0] < self.target_size:
 
             tmp_intensities = np.zeros((self.target_size,), dtype=np.float)
-            tmp_intensities[0:self.target_size] = self.original_intensities
+            tmp_intensities[0:self.original_intensities.shape[0]] = self.original_intensities
 
             medium_diff = 0
             for i in range(1, self.masses.shape[0]):
@@ -96,7 +96,7 @@ class Spectrum:
             target_size_diff = self.target_size - self.masses.shape[0]
 
             tmp_masses = np.zeros((self.target_size,), dtype=np.float)
-            tmp_masses[0:self.target_size] = self.masses
+            tmp_masses[0:self.masses.shape[0]] = self.masses
 
             for i in range(1, target_size_diff):
                 current_mass_index = self.masses.shape[0] - 1 + i
