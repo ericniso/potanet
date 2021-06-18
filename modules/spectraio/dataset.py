@@ -10,7 +10,6 @@ class Dataset:
         self.root = Path(config.POTANET_ROOT_DIR)
         self.imzML_extracted_path = Path(config.POTANET_IMZML_EXTRACTED_ROOT_DIR)
 
-        # TODO: change order
         self.diagnosis_to_index = dict(
             HP=0,
             PTC=1,
