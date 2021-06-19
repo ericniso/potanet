@@ -10,7 +10,7 @@ class Spectrum:
 
     def __int__(self, files, csv_row):
 
-        self.target_size = config.SPECTRUM_SIZE
+        self.target_size = config.POTANET_SPECTRUM_SIZE
 
         self.dataset = csv_row.at["dataset"]
         self.sample = csv_row.at["sample"]
@@ -18,7 +18,7 @@ class Spectrum:
         self.diagnosis = csv_row.at["diagnosis"]
         self.original_intensities = np.loadtxt(
             files.spectra_processed_dataset_intensities / "{}.txt".format(self.sample))
-        self.masses = np.loadtxt(files.spectra_processed_dataset_masses / "{}.txt".format(self.sample))
+        self.original_masses = np.loadtxt(files.spectra_processed_dataset_masses / "{}.txt".format(self.sample))
         self.coordinates = np.array([
             csv_row.at["coordinates_x"],
             csv_row.at["coordinates_y"],
@@ -26,10 +26,10 @@ class Spectrum:
         ], dtype=np.int)
 
         # TODO: check for intensities < 0
+        self.intensities = np.copy(self.original_intensities)
+        self.masses = np.copy(self.original_masses)
 
         self.__check_shape__()
-
-        self.intensities = np.copy(self.original_intensities)
 
     def normalize_tic(self):
         tic = np.sum(self.intensities)
@@ -76,17 +76,21 @@ class Spectrum:
 
         self.intensities = tmp_zeros
 
+    def is_below_threshold(self, threshold):
+
+        return np.argwhere(self.intensities > threshold).shape[0] == 0
+
     def __check_shape__(self):
 
-        if self.original_intensities.shape[0] > self.target_size:
+        if self.intensities.shape[0] > self.target_size:
 
-            self.original_intensities = self.original_intensities[0:self.target_size]
+            self.intensities = self.intensities[0:self.target_size]
             self.masses = self.masses[0:self.target_size]
 
-        if self.original_intensities.shape[0] < self.target_size:
+        if self.intensities.shape[0] < self.target_size:
 
             tmp_intensities = np.zeros((self.target_size,), dtype=np.float)
-            tmp_intensities[0:self.original_intensities.shape[0]] = self.original_intensities
+            tmp_intensities[0:self.intensities.shape[0]] = self.intensities
 
             medium_diff = 0
             for i in range(1, self.masses.shape[0]):
@@ -102,7 +106,7 @@ class Spectrum:
                 current_mass_index = self.masses.shape[0] - 1 + i
                 tmp_masses[current_mass_index] = self.masses[-1] + i * medium_diff
 
-            self.original_intensities = tmp_intensities
+            self.intensities = tmp_intensities
             self.masses = tmp_masses
 
     def __repr__(self):
