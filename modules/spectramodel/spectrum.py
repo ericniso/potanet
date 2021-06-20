@@ -96,7 +96,7 @@ class Spectrum:
             for i in range(1, self.masses.shape[0]):
                 medium_diff += self.masses[i] - self.masses[i - 1]
 
-            medium_diff /= self.masses.shape[0] - 1
+            medium_diff /= self.masses.shape[0]
             target_size_diff = self.target_size - self.masses.shape[0]
 
             tmp_masses = np.zeros((self.target_size,), dtype=np.float)
